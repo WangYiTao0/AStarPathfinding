@@ -30,7 +30,7 @@ public class Heap<T> where T: IHeapItem<T>
                 return firstItem;
         }
 
-        public bool Contain(T item)
+        public bool Contains(T item)
         {
                 return Equals(_items[item.HeapIndex], item);
         }

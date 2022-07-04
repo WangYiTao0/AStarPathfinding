@@ -30,30 +30,28 @@ public class PathFinding : MonoBehaviour
                 Node startNode = _grid.GetNodeFromWorldPoint(starPos);
                 Node targetNode = _grid.GetNodeFromWorldPoint(targetPos);
                 //要评估的节点集
-                List<Node> openSet = new List<Node>();
+                Heap<Node> openSet = new Heap<Node>(_grid.MaxSize);
                 // 已经被评估的节点集
                 HashSet<Node> closedSet = new HashSet<Node>();//HashSet no order 不允许重复 
                 // add the start node to Open
                 openSet.Add(startNode);
                 
-                //TODO Heap Optimization 二叉树 父节点 小于 两个子节点
-         
                 //Loop
                 while (openSet.Count > 0)
                 {
-                    Node currentNode = openSet[0];
-                    for (int i = 1; i < openSet.Count; i++)
-                    {
-                        //如果检查的F值小于当前NodeF值 替换它  等于的话 取 H最小
-                        if (openSet[i].F < currentNode.F　|| openSet[i].F  == currentNode.F &&openSet[i].H < currentNode.H)
-                        {
-                            //current = node in Open with lowest f_cost lowest h_cost 
-                            currentNode = openSet[i];
-                        }
-                    }
-
-                    //remove current from Open
-                    openSet.Remove(currentNode);
+                    Node currentNode = openSet.RemoveFirst();
+                    // Node currentNode = openSet[0];
+                    // for (int i = 1; i < openSet.Count; i++)
+                    // {
+                    //     //如果检查的F值小于当前NodeF值 替换它  等于的话 取 H最小
+                    //     if (openSet[i].F < currentNode.F　|| openSet[i].F  == currentNode.F &&openSet[i].H < currentNode.H)
+                    //     {
+                    //         //current = node in Open with lowest f_cost lowest h_cost 
+                    //         currentNode = openSet[i];
+                    //     }
+                    // }
+                    // //remove current from Open
+                    // openSet.Remove(currentNode);
                     //add current to Closed
                     closedSet.Add(currentNode);
                     //  if current is target node // 找到路径了
