@@ -1,5 +1,9 @@
 ﻿using System;
 
+/// <summary>
+/// Heap 数据结构
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public class Heap<T> where T: IHeapItem<T>
 { 
         private T[] _items;

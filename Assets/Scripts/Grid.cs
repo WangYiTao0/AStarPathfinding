@@ -5,10 +5,7 @@ using UnityEngine;
 
 public class Grid : MonoBehaviour
 {
-    public bool OnlyDisplayPassGizimo = true;
-    
-    //TODO Remove Test Code
-    [SerializeField] private Transform _playerTransform;
+    [SerializeField] private bool _disPlayGridGizmos;
     
     [SerializeField] private Vector2 _gridWordSize;
     [SerializeField] private LayerMask _unWalkableMask;
@@ -21,7 +18,7 @@ public class Grid : MonoBehaviour
 
     public int MaxSize => _gridSizeX * _gridSizeY;
 
-    private void Start()
+    private void Awake()
     {
         _nodeDiameter = _nodeRadius * 2;
         _gridSizeX =Mathf.RoundToInt (_gridWordSize.x / _nodeDiameter);//每行有几个Grid
@@ -98,51 +95,18 @@ public class Grid : MonoBehaviour
     
 #if UNITY_EDITOR
 
-    public List<Node> Path = new List<Node>();
-
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(_gridWordSize.x, 1, _gridWordSize.y));
 
-        if (OnlyDisplayPassGizimo)
-        {
-            if (Path != null)
-            {
-                foreach (var node in Path)
-                {
-                    Gizmos.color = Color.black;
-                    Gizmos.DrawCube(node.WorldPosition, Vector3.one * (_nodeDiameter - 0.1f));
-                }
-            }
-        }
-        else
-        {
-
-            if (_grid != null)
-            {
-                Node playerNode = GetNodeFromWorldPoint(_playerTransform.position);
-
-                foreach (var node in _grid)
-                {
-                    Gizmos.color = node.Walkable ? Color.white : Color.red;
-                    //TODO Remove Test Code
-                    if (playerNode == node)
-                    {
-                        Gizmos.color = Color.cyan;
-                    }
-
-                    if (Path != null)
-                    {
-                        if (Path.Contains(node))
-                        {
-                            Gizmos.color = Color.black;
-                        }
-                    }
-
-                    Gizmos.DrawCube(node.WorldPosition, Vector3.one * (_nodeDiameter - 0.1f));
-                }
-            }
-        }
+         if (_grid != null && _disPlayGridGizmos)
+         {
+             foreach (var node in _grid)
+             {
+                 Gizmos.color = node.Walkable ? Color.white : Color.red;
+                 Gizmos.DrawCube(node.WorldPosition, Vector3.one * (_nodeDiameter - 0.1f));
+             }
+         }
     }
 #endif
 }
