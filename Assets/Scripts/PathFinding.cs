@@ -94,7 +94,13 @@ public class PathFinding : MonoBehaviour
                                 neighbour.Parent = currentNode;
                                 if (!openSet.Contains(neighbour))
                                 {
+                                    //如果要检测的Node里没有这个邻居 添加进去
                                     openSet.Add(neighbour);
+                                }
+                                else
+                                {
+                                    //如果有要更新数值
+                                    openSet.UpdateItem(neighbour);
                                 }
                             }
                         }

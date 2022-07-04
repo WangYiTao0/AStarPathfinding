@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class PathRequestManager : MonoBehaviour
 {
+        /// <summary>
+        /// 请求Queue 先入先出
+        /// </summary>
         private Queue<PathRequest> _pathRequestQueue = new Queue<PathRequest>();
         private PathRequest _currentPathRequest;
 
@@ -20,7 +23,9 @@ public class PathRequestManager : MonoBehaviour
 
         public static void RequestPath(Vector3 start, Vector3 end, Action<Vector3[],bool> callback)
         {
+            //当新的 寻路请求来的时候
             PathRequest newRequest = new PathRequest(start,end,callback);
+            // 添加到Queue里
             _instance._pathRequestQueue.Enqueue(newRequest);
             _instance.TryProcessNext();
         }
@@ -34,6 +39,7 @@ public class PathRequestManager : MonoBehaviour
                 _isProcessingPath = true;
                 _pathFinding.StartFindPath(_currentPathRequest.PathStart, _currentPathRequest.PathEnd);
             }
+            //如果在处理路径就等待路径处理完 路径处理完调用TryProcessNext() 对下一个请求进行处理
         }
 
         public void FinishedProcessingPath(Vector3[] path,bool success)
