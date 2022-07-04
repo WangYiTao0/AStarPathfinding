@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Diagnostics;
 
 public class PathFinding : MonoBehaviour
 {
@@ -15,11 +16,17 @@ public class PathFinding : MonoBehaviour
 
         private void Update()
         {
-            FindPath(Seeker.position, Target.position);
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                FindPath(Seeker.position, Target.position);
+            }
         }
 
         void FindPath(Vector3 starPos, Vector3 targetPos)
         {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+            
                 Node startNode = _grid.GetNodeFromWorldPoint(starPos);
                 Node targetNode = _grid.GetNodeFromWorldPoint(targetPos);
                 //要评估的节点集
@@ -52,6 +59,8 @@ public class PathFinding : MonoBehaviour
                     //  if current is target node // 找到路径了
                     if (currentNode == targetNode)
                     {
+                        stopwatch.Stop();
+                        print($"Path Found: {stopwatch.ElapsedMilliseconds}  ms") ;
                         //Find Path
                         RetracePath(startNode, targetNode);
                         return;
