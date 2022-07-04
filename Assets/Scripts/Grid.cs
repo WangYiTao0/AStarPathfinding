@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class Grid : MonoBehaviour
 {
+    //TODO Remove Test Code
     [SerializeField] private Transform _playerTransform;
     
     [SerializeField] private Vector2 _gridWordSize;
@@ -44,6 +45,11 @@ public class Grid : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 根据世界坐标返回Node
+    /// </summary>
+    /// <param name="worldPosition"></param>
+    /// <returns></returns>
     public Node GetNodeFromWorldPoint(Vector3 worldPosition)
     {
         //当前位置 / _gridWordSize
@@ -69,6 +75,7 @@ public class Grid : MonoBehaviour
             foreach (var node in _grid)
             {
                 Gizmos.color = node.Walkable ? Color.white : Color.red;
+                //TODO Remove Test Code
                 if (playerNode == node)
                 {
                     Gizmos.color = Color.cyan;
