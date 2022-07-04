@@ -9,6 +9,10 @@ public class Node : IHeapItem<Node>
         public Vector3 WorldPosition;
         public int GridX;
         public int GridY;
+        /// <summary>
+        /// 移动惩罚值
+        /// </summary>
+        public int MovementPenalty;
 
         /// <summary>
         /// G Cost
