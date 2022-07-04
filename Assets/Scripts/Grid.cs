@@ -16,7 +16,7 @@ public class Grid : MonoBehaviour
     //node 直径
     private float _nodeDiameter;
     private int _gridSizeX, _gridSizeY;
-    
+
     private void Start()
     {
         _nodeDiameter = _nodeRadius * 2;
@@ -27,6 +27,9 @@ public class Grid : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// Create Grid
+    /// </summary>
     private void CreateGrid()
     {
         _grid = new Node[_gridSizeX, _gridSizeY];
@@ -40,10 +43,35 @@ public class Grid : MonoBehaviour
                 Vector3 worldPoint = worldBottomLeft + Vector3.right * (x * _nodeDiameter + _nodeRadius)
                     + Vector3.forward * (y * _nodeDiameter + _nodeRadius); //grid中心点位置所以要加半径
                 bool walkable = !(Physics.CheckSphere(worldPoint, _nodeRadius, _unWalkableMask));
-                _grid[x, y] = new Node(walkable, worldPoint);
+                _grid[x, y] = new Node(walkable, worldPoint,x,y);
             }
         }
     }
+
+    public List<Node> GetNeighbours(Node node)
+    {
+        List<Node> neighbours = new List<Node>();
+
+        for (int x = -1; x <=  1; x++)
+        {
+            for (int y = -1; y <=  1; y++)
+            {
+                if(x==0 && y == 0)
+                    continue;
+
+                int checkX = node.GridX + x;
+                int checkY = node.GridY + y;
+
+                if (checkX >= 0 && checkX < _gridSizeX && checkY >= 0 && checkY < _gridSizeY)
+                {
+                    neighbours.Add(_grid[checkX,checkY]);
+                }
+            }
+        }
+
+        return neighbours;
+    }
+    
 
     /// <summary>
     /// 根据世界坐标返回Node
@@ -52,18 +80,22 @@ public class Grid : MonoBehaviour
     /// <returns></returns>
     public Node GetNodeFromWorldPoint(Vector3 worldPosition)
     {
-        //当前位置 / _gridWordSize
+        //当前位置 在_gridWordSize里的百分比
         float percentX =  Mathf.Clamp01((worldPosition.x + _gridWordSize.x / 2) / _gridWordSize.x);
         float percentY =  Mathf.Clamp01((worldPosition.z + _gridWordSize.y / 2) / _gridWordSize.y);
 
+        // Cast to Index
         int x = Mathf.RoundToInt ((_gridSizeX - 1) * percentX);
         int y = Mathf.RoundToInt ((_gridSizeY - 1) * percentY);
 
         return _grid[x, y];
     }
     
-#if UNITY_EDITOR
     
+#if UNITY_EDITOR
+
+    public List<Node> Path = new List<Node>();
+
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, new Vector3( _gridWordSize.x,1,_gridWordSize.y));
@@ -79,6 +111,14 @@ public class Grid : MonoBehaviour
                 if (playerNode == node)
                 {
                     Gizmos.color = Color.cyan;
+                }
+
+                if (Path != null)
+                {
+                    if (Path.Contains(node))
+                    {
+                        Gizmos.color = Color.black;
+                    }
                 }
                 Gizmos.DrawCube(node.WorldPosition,Vector3.one * (_nodeDiameter - 0.1f));                
             }
