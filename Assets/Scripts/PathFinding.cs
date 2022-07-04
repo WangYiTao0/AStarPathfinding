@@ -29,6 +29,8 @@ public class PathFinding : MonoBehaviour
                 // add the start node to Open
                 openSet.Add(startNode);
                 
+                //TODO Heap Optimization 二叉树 父节点 小于 两个子节点
+         
                 //Loop
                 while (openSet.Count > 0)
                 {
