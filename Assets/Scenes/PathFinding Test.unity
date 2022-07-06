@@ -1841,7 +1841,7 @@ MonoBehaviour:
   - TerrainMask:
       serializedVersion: 2
       m_Bits: 256
-    TerrainPenalty: 0
+    TerrainPenalty: 5
 --- !u!114 &1852376817
 MonoBehaviour:
   m_ObjectHideFlags: 0

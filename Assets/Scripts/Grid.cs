@@ -19,11 +19,15 @@ namespace Astar
         /// </summary>
         [SerializeField] private TerrainType[] _walkableRegions;
 
+        [SerializeField] private int _obstacleProximityPenalty = 10;
+        
         private LayerMask _walkableLayerMask;
         private Dictionary<int, int> _walkableRegionsDictionary = new Dictionary<int, int>();
 
         private Node[,] _grid;
 
+        int _penaltyMin = Int32.MaxValue;
+        int _penaltyMax = Int32.MinValue;
 
 
         //node 直径
@@ -71,18 +75,95 @@ namespace Astar
                     int movementPenalty = 0;
 
                     //Raycast
-                    if (walkable)
+                    Ray ray = new Ray(worldPoint + Vector3.up * 50, Vector3.down);
+                    RaycastHit hit;
+                    if(Physics.Raycast(ray,out hit,100,_walkableLayerMask))
                     {
-                        Ray ray = new Ray(worldPoint + Vector3.up * 50, Vector3.down);
-                        RaycastHit hit;
-                        if(Physics.Raycast(ray,out hit,100,_walkableLayerMask))
-                        {
-                            _walkableRegionsDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
-                        }
+                        _walkableRegionsDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
+                    }
+
+                    if (!walkable)
+                    {
+                        movementPenalty += _obstacleProximityPenalty;
                     }
                     
-
                     _grid[x, y] = new Node(walkable, worldPoint, x, y, movementPenalty);
+                }
+            }
+            
+            BlurPenaltyMap(3);
+        }
+
+        void BlurPenaltyMap(int blurSize)
+        {
+            int kernelSize = blurSize * 2 - 1;
+            int kernelExtents = (kernelSize - 1) /2;
+
+            int[,] penaltyHorizontalPass = new int[_gridSizeX, _gridSizeY];
+            int[,] penaltyVerticalPass = new int[_gridSizeX, _gridSizeY];
+            
+                //横向计算
+            for (int y = 0; y < _gridSizeY; y++)
+            {
+                for (int x =-kernelExtents; x <= kernelExtents; x++)
+                {
+                    // 3格的kernel -1到1 sampleX(0,1)
+                    int sampleX = Mathf.Clamp(x, 0, kernelExtents);
+                    //每一行 第一格的 三个Kernel 和值
+                    penaltyHorizontalPass[0, y] += _grid[sampleX, y].MovementPenalty;
+                }
+
+                //通过每一行第一格的和值 计算 之后所有的和值
+                // 旧值 - 去除掉的格子的值 + 新加的格子的值
+                for (int x = 1; x < _gridSizeX; x++)
+                {
+                    // 防止超出索引
+                    int removeIndex = Mathf.Clamp(x - kernelExtents - 1, 0, _gridSizeX);
+                    int addIndex =  Mathf.Clamp(x + kernelExtents,0,_gridSizeX -1);
+                    //kernelSize = 3的情况 和的新值[x,y] = 和的旧值[x-1,y]- 前两格[x-2.y] + 后一个[x+1,y] //
+                    penaltyHorizontalPass[x, y] =
+                        penaltyHorizontalPass[x- 1, y] - _grid[removeIndex, y].MovementPenalty + _grid[addIndex,y].MovementPenalty;
+                }
+            }
+            //横向计算
+            for (int x = 0; x < _gridSizeX; x++)
+            {
+                for (int y = -kernelExtents; y <= kernelExtents; y++)
+                {
+                    int sampleY = Mathf.Clamp(y, 0, kernelExtents);
+                    //每一列 第一格的 三个Kernel 和值
+                    //从 横向 采样
+                    penaltyVerticalPass[x, 0] += penaltyHorizontalPass[x, sampleY];
+                }
+                
+                int blurredPenalty =
+                    Mathf.RoundToInt((float)penaltyVerticalPass[x, 0] / (kernelSize * kernelSize));
+                _grid[x, 0].MovementPenalty = blurredPenalty;
+                //通过每一列 第一格的和值 计算 之后所有的和值
+                // 旧值 - 去除掉的格子的值 + 新加的格子的值
+                for (int y = 1; y < _gridSizeY; y++)
+                {
+                    // 防止超出索引
+                    int removeIndex = Mathf.Clamp(y - kernelExtents - 1, 0, _gridSizeY);
+                    int addIndex = Mathf.Clamp(y + kernelExtents, 0, _gridSizeY - 1);
+                    // kernelSize = 3的情况 和的新值[x,y] = 喝的旧值[x,y-1] - 前两格[x,y-2] + 后一个[x,y+1] //
+                    penaltyVerticalPass[x, y] =
+                        penaltyVerticalPass[x, y-1] - penaltyHorizontalPass[x, removeIndex] +
+                        penaltyHorizontalPass[x, addIndex];
+
+                    blurredPenalty =
+                        Mathf.RoundToInt((float)penaltyVerticalPass[x, y] / (kernelSize * kernelSize));
+                    _grid[x, y].MovementPenalty = blurredPenalty;
+
+                    if (blurredPenalty > _penaltyMax)
+                    {
+                        _penaltyMax = blurredPenalty;
+                    }
+
+                    if (blurredPenalty < _penaltyMin)
+                    {
+                        _penaltyMin = blurredPenalty;
+                    }
                 }
             }
         }
@@ -142,8 +223,11 @@ namespace Astar
             {
                 foreach (var node in _grid)
                 {
-                    Gizmos.color = node.Walkable ? Color.white : Color.red;
-                    Gizmos.DrawCube(node.WorldPosition, Vector3.one * (_nodeDiameter - 0.1f));
+                    Gizmos.color = Color.Lerp(Color.white, Color.black,
+                        Mathf.InverseLerp(_penaltyMin, _penaltyMax, node.MovementPenalty));
+                    
+                    Gizmos.color = node.Walkable ? Gizmos.color : Color.red;
+                    Gizmos.DrawCube(node.WorldPosition, Vector3.one * (_nodeDiameter));
                 }
             }
         }
