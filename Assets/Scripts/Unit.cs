@@ -2,71 +2,77 @@
 using System.Collections;
 using UnityEngine;
 
-public class Unit : MonoBehaviour
+namespace Astar
 {
-      [SerializeField] private Transform _target;
-      [SerializeField]private float _speed = 5;
-      private Vector3[] _path;
-      /// <summary>
-      /// 目标索引
-      /// </summary>
-      private int _targetIndex = 0;
+    public class Unit : MonoBehaviour
+    {
+        [SerializeField] private Transform _target;
+        [SerializeField] private float _speed = 5;
+        private Vector3[] _path;
 
-      private void Start()
-      {
-          PathRequestManager.RequestPath(transform.position,_target.position,OnPathFound);
-      }
+        /// <summary>
+        /// 目标索引
+        /// </summary>
+        private int _targetIndex = 0;
 
-      private void OnPathFound(Vector3[] newPath, bool pathSuccessful)
-      {
-          if (pathSuccessful)
-          {
-              _path = newPath;
-              StopCoroutine("FollowPath");
-              StartCoroutine("FollowPath");
-          }
-      }
+        private void Start()
+        {
+            PathRequestManager.RequestPath(transform.position, _target.position, OnPathFound);
+        }
 
-      IEnumerator FollowPath()
-      {
-          Vector3 currentWayPoint = _path[0];
-          while (true)
-          {
-              if (transform.position == currentWayPoint)
-              {
-                  //到达目标后 索引++ _path的索引
-                  _targetIndex++;
-                  if (_targetIndex >= _path.Length)
-                  {
-                      yield break;
-                  }
-                  //下一个Path
-                  currentWayPoint = _path[_targetIndex];
-              }
-              // 移动
-              transform.position = Vector3.MoveTowards(transform.position, currentWayPoint, _speed * Time.deltaTime);
-              yield return null;
-          }
-      }
+        private void OnPathFound(Vector3[] newPath, bool pathSuccessful)
+        {
+            if (pathSuccessful)
+            {
+                _path = newPath;
+                StopCoroutine("FollowPath");
+                StartCoroutine("FollowPath");
+            }
+        }
 
-
-      private void OnDrawGizmos()
-      {
-          if (_path != null)
-          {
-              for (int i = _targetIndex; i < _path.Length; i++)
-              {
-                Gizmos.color = Color.black;
-                Gizmos.DrawCube(_path[1],Vector3.one);
-                if (i == _targetIndex)
+        IEnumerator FollowPath()
+        {
+            Vector3 currentWayPoint = _path[0];
+            while (true)
+            {
+                if (transform.position == currentWayPoint)
                 {
-                    Gizmos.DrawLine(transform.position,_path[i]);
+                    //到达目标后 索引++ _path的索引
+                    _targetIndex++;
+                    if (_targetIndex >= _path.Length)
+                    {
+                        yield break;
+                    }
+
+                    //下一个Path
+                    currentWayPoint = _path[_targetIndex];
                 }
-                else
+
+                // 移动
+                transform.position = Vector3.MoveTowards(transform.position, currentWayPoint, _speed * Time.deltaTime);
+                yield return null;
+            }
+        }
+
+
+        private void OnDrawGizmos()
+        {
+            if (_path != null)
+            {
+                for (int i = _targetIndex; i < _path.Length; i++)
                 {
-                    Gizmos.DrawLine(_path[i-1],_path[i]);
+                    Gizmos.color = Color.black;
+                    Gizmos.DrawCube(_path[1], Vector3.one);
+                    if (i == _targetIndex)
+                    {
+                        Gizmos.DrawLine(transform.position, _path[i]);
+                    }
+                    else
+                    {
+                        Gizmos.DrawLine(_path[i - 1], _path[i]);
+                    }
                 }
-              }
-          }
-      }
+            }
+        }
+    }
 }

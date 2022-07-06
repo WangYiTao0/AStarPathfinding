@@ -26,12 +26,13 @@ public class Node : IHeapItem<Node>
 
         private int heapIndex;
         
-        public Node(bool walkable, Vector3 worldPosition,int gridX, int gridY)
+        public Node(bool walkable, Vector3 worldPosition,int gridX, int gridY, int movementPenalty)
         {
                 Walkable = walkable;
                 WorldPosition = worldPosition;
                 GridX = gridX;
                 GridY = gridY;
+                MovementPenalty = movementPenalty;
         }
 
         public int CompareTo(Node other)
